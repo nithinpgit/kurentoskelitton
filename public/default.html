@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="utf-8">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+      <link rel="apple-touch-icon" href="apple-touch-icon.png">
+      <title>Flow broadcaster</title>
+   </head>
+   <body></body>
+</html>
+<script>
+var defaultMic = false;
+var defaultCam = false;
+navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(handleError);
+function gotDevices(deviceInfos) {
+   for (var i = 0; i !== deviceInfos.length; ++i) {
+        var deviceInfo = deviceInfos[i];
+        if (deviceInfo.kind === 'audioinput') {
+            var infolabal = deviceInfo.label;
+            if(infolabal.indexOf('Default') != -1){
+               defaultMic = deviceInfo.deviceId;
+            }
+            
+
+        }else if (deviceInfo.kind === 'videoinput') {
+            var infolabal = deviceInfo.label;
+            if(infolabal.indexOf('Default') != -1){
+               defaultCam = deviceInfo.deviceId;
+            }
+        }
+   }
+   alert('Default MIC ID = '+defaultMic + 'Default CAM ID = '+defaultCam);
+}
+function handleError(error) {
+    console.log('navigator.getUserMedia error: ', error);
+}
+</script>

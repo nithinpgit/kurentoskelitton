@@ -1,0 +1,260 @@
+        body{
+            overflow: hidden;
+        }
+        .logo{
+                font-size: 25px;
+    font-weight: bold;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 999999999;
+    color: rgba(255, 255, 255, 0.40);
+        }
+        .notification{
+            position: fixed;
+            width: 100%;
+            padding: 5px;
+            top: 45%;
+            display: none;
+            color: rgba(255, 255, 255, 0.50);
+            font-size: 18px;
+            text-align: center;
+            font-weight: bold;
+            z-index: 999999;
+        }
+        .device-drop{
+            width: 100%;
+            border-radius: 0px;
+            height: 36px;
+        }
+        
+        .device-head{
+            text-align: center;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .settings-wrap{
+            width: 300px !important;
+        }
+        .show{
+            display: block !important;
+        }
+        .hide{
+            display: none;
+        }
+        .tools ul{
+            display: block;
+            width: 310px;
+            margin: 0 auto;
+            height: 50px;
+            padding: 0px;
+        }
+        .tools ul li{
+            display: block;
+            float: left;
+            width: 50px;
+            height: 50px;
+            background: #C62828;
+            border-radius: 50px;
+            margin: 5px;
+            padding: 13px;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            box-shadow: 0 3px 9px rgba(198, 40, 40, 0.61);
+        }
+        .tools ul li:hover{
+          opacity: .8;
+        }
+        .myvideo-active{
+            width:160px;
+            height:120px;
+        }
+        .myvideo-dead{
+            width:100%;
+            height:100%;
+            object-fit: cover;
+        }
+        .tools{
+            position: fixed;
+            bottom: 0px;
+            text-align: center;
+            width:100%;
+            z-index: 99999;
+        }
+        .chat-input{
+            padding: 9px !important;
+        }
+        .chat-entry-bubble{
+           width: 100%;
+           background-color: rgba(0, 0, 0, 0.27058823529411763);
+           padding: 10px;
+           color: #fff;
+        }
+        .chat-list{
+            position: absolute;
+            width: 100%;
+            top: 0px;
+            bottom: 53px;
+            overflow-y: hidden;
+            overflow-x: hidden;
+        }
+        .input-group-lg{
+            position: absolute;
+            bottom: 69px;
+            z-index: 999999;
+            width: 340px;
+            left: calc(50% - 170px);
+            opacity: .5;
+        }
+        .close-chat{
+            position: absolute;
+            right: -12px;
+            top: -10px;
+            z-index: 9;
+            width: 15px;
+            cursor: pointer;
+            background-color: #fff;
+            border-radius: 20px;
+        }
+        p{
+            margin: 0px !important;
+            padding: 0px !important;
+        }
+        .avatar img{
+            height: 50px;
+        }
+        .chat-parent{
+            z-index: 99999;
+            position: fixed;
+            width: 340px;
+            /* right: 0px; */
+            top: 0px;
+            opacity: .5;
+            height: 400px;
+            left: calc(50% - 170px);
+            display: none
+        }
+        #videosettings{
+            max-height: 240px;
+        }
+        #video{
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 999;
+        }
+        .my-video{
+            position: fixed;
+            bottom: 0px;
+            right: 0px;
+            z-index: 9999;
+        }
+        .terms-overlay{
+            position: fixed;
+            height: 100%;
+            width: 100%;
+            background-image: url('../images/termsbg.jpg');
+            z-index: 9999999;
+            background-size: cover;
+            color: #fff;
+        }
+        .zmdi-more-vert{
+            display: none;
+        }
+        .list-height{
+            height: 378px !important;
+        }
+        video{
+            background-color: #000;
+        }
+        .chat-entries{
+            height: 330px !important;
+        }
+              
+        
+        
+       .smily-pop{
+            position: absolute;
+            background: #f8f9fa;
+            width: 182px;
+            height: 150px;
+            top: -155px;
+            border-radius: 4px;
+            left: 5px;
+            z-index: 999999;
+            border: 1px solid #eee;
+            padding: 6px;
+            display: none;
+       }
+       .terms-content{
+           width: 50%;
+           margin: 0 auto;
+           margin-top:50px;
+           font-size: 18px;
+            border-radius: .5em;
+            -moz-border-radius: .5em;
+            -webkit-border-radius: .5em;
+            box-shadow: inset 0 0 0.5em #BBB;
+            -webkit-box-shadow: inset 0 0 0.5em #BBB;
+            line-height: 40px;
+            padding-bottom: 15px;
+            background: rgba(0, 0, 0, 0.6);
+       }
+       .wraper{
+           padding: 15px;
+           width: 100%;
+       }
+       .terms-header{
+           height: 40px;
+           width: 100%;
+           background: #C62828;
+           text-align: center;
+           color: #fff;
+       }
+       .btn-parent{
+           width:100%;
+           text-align: center;
+       }
+       .gender-div{
+           width: 100%;
+           padding: 40px;
+           text-align: center;
+           font-size: 18px;
+       }
+       .smily-pop i{
+           cursor: pointer;
+       }
+       .smily-pop i:hover{
+           opacity: .7;
+       }
+       button{
+           cursor: pointer;
+       }
+       @media all and (max-width:1000px){
+        .terms-content{
+            width: 90%;  
+            line-height: 30px;
+            margin-top: 60px;
+        }  
+        .chat-parent{
+            z-index: 99999;
+            position: fixed;
+            width: 360px;
+            /* right: 0px; */
+            top: 0px;
+            height: 400px;
+            display: none;
+        }
+        }
+        @media all and (max-width:480px){
+          .chat-parent{
+            z-index: 99999;
+            position: fixed;
+            width: 100%;
+            left: 0px;;
+            top: 50px;
+            height: 300px;
+            display: none;
+        }
+        }

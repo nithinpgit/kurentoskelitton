@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="utf-8">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+      <link rel="apple-touch-icon" href="apple-touch-icon.png">
+      <title>Flow broadcaster</title>
+      <script>
+         var videoStream;
+         var selectedMicrophone;
+         var selectedCamera;
+         var audioPresent = false;
+         var videoPresent = false;
+         var camAvailable  = false;
+         var micAvailable  = false;
+      </script>
+      <link rel="stylesheet" href="/assets/css/bootstrap.css">
+      <link rel="stylesheet" href="/assets/css/custom.css">
+   </head>
+   <body>
+      <div class="logo">Flow Broadcaster</div>
+      <div class="logo" style="right: 10px;font-size: 14px;left: auto;display: none;"><span class="user-count"></span> users online</div>
+      <div id="beta" class="terms-overlay" style="display: none;">
+         <div class="header"></div>
+         <div class="terms-content settings-wrap">
+            <div class="terms-header">Audio & Video Settings</div>
+            <div class="wraper">
+               <h4 class="device-head">Choose Camera</h4>
+               <video id="videosettings" width="100%" muted="true"></video>
+               <select id="videoSource" class="btn btn-dropdown dropdown-toggle device-drop"></select>
+               <h4 class="device-head">Choose Audio</h4>
+               <select id="audioSource" class="btn btn-dropdown dropdown-toggle device-drop"></select>
+               <select style="display: none" id="audioOutput"></select>
+            </div>
+            <div class="btn-parent"><button onclick="onContinue()" class="btn" style="background: #FF5252;color: #fff;margin-right: 10px;">Save And Continue</button><button onclick="cancelPop()" class="btn" style="background: #FF5252;color: #fff;">Cancel</button></div>
+         </div>
+      </div>
+      <video id="video" playsinline autoplay></video>
+      <div class="tools">
+         <ul>
+            <li onclick="disposeWebrtc()" style="border-radius: 80px;width: 110px;" class="stop-btn">
+               <svg style="float: left;" fill="#FFFFFF" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/>
+                  <path d="M0 0h24v24H0z" fill="none"/>
+               </svg>
+               <span class="stop-lab" style="line-height: 23px;float: left;margin-left: 10px;color: #fff;">Stop</span>
+            </li>
+            <li onclick="videoBtnClick()">
+               <svg class="cam-on show hide" fill="#FFFFFF" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M0 0h24v24H0z" fill="none"/>
+                  <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+               </svg>
+               <svg class="cam-off hide" fill="#FFFFFF" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M0 0h24v24H0zm0 0h24v24H0z" fill="none"/>
+                  <path d="M21 6.5l-4 4V7c0-.55-.45-1-1-1H9.82L21 17.18V6.5zM3.27 2L2 3.27 4.73 6H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.21 0 .39-.08.54-.18L19.73 21 21 19.73 3.27 2z"/>
+               </svg>
+            </li>
+            <li onclick="audioBtnClick()">
+               <svg class="mic-on show hide" fill="#FFFFFF" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                  <path d="M0 0h24v24H0z" fill="none"/>
+               </svg>
+               <svg class="mic-off hide" fill="#FFFFFF" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M0 0h24v24H0zm0 0h24v24H0z" fill="none"/>
+                  <path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z"/>
+               </svg>
+            </li>
+            <li onclick="showBeta()">
+               <svg fill="#FFFFFF" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M0 0h24v24H0z" fill="none"/>
+                  <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+               </svg>
+            </li>
+         </ul>
+      </div>
+   </body>
+</html>
+<script src="/assets/js/jquery.min.js"></script>
+<script src="/socket.io/socket.io.js" ></script>
+<script src="assets/js/adapter.js"></script>
+<script src="assets/js/kurento-utils.js" ></script>
+<script src="assets/js/settings.js" ></script>
+<script>
+   var socket = io.connect('/');
+   var video;
+   var webRtcPeer;
+   socket.on('connect',function(){
+       showBeta();
+         socket.on('onPublishAnswer',function(message){
+               if (message.response != 'accepted') {
+                      alert('not accepted');
+                   } else {
+                       webRtcPeer.processAnswer(message.sdpAnswer);
+                   }
+           });
+         socket.on('onIceCandidate',function(candidate){
+               webRtcPeer.addIceCandidate(candidate);
+           });
+       socket.on('successFileStream',function(url){
+              //alert(url);
+           });
+   });
+   function startPub(){
+       //startVod();
+       //return;
+        video = document.getElementById('video');
+        presenter();
+   }
+   function startVod(){
+       var message = {
+   		id : 'publishFromFile',
+   		url : 'http://uploadsflow.s3.amazonaws.com/b.mp4'
+   	};
+   	sendMessage(message);
+   }
+   function presenter() {
+   	if (!webRtcPeer) {
+           var audioObj = false;
+           var videoObj = false;
+           if(audioPresent){
+                  if(selectedMicrophone){
+                      audioObj = {deviceId: {exact: selectedMicrophone}}
+                  }else{
+                      audioObj = {deviceId: undefined}
+                  }
+           }
+           if(videoPresent){
+                  if(selectedCamera){
+                      videoObj = {deviceId: {exact: selectedCamera}}
+                  }else{
+                      videoObj = {deviceId: undefined}
+                  }
+           }     
+           var constraints = {
+                       audio: audioObj,
+                       video: videoObj
+                   }
+           console.log('Media Constraints : '+JSON.stringify(constraints));
+           var options = {
+   		    localVideo: video,
+   			onicecandidate : onIceCandidate,
+               configuration: {
+                       iceServers:[
+                       { "url": "turn:54.169.103.77:443?transport=tcp",
+                       "username": "turn",
+                       "credential": "turn"
+                       }
+                   ]
+               },
+               mediaConstraints:constraints
+   	    }
+   
+           /*
+           assigning screenconstraints for mozilla
+           */
+           /*
+           if (!!navigator.mozGetUserMedia) {
+               options = {
+                       localVideo: video,
+                       onicecandidate : onIceCandidate,
+                       mediaConstraints:constraints,
+                      
+                   }
+           }
+           */
+   		webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function(error) {
+   			if(error) return onError(error);
+   			this.generateOffer(onOfferPresenter);
+               video.play();
+   		});
+   	}
+   }
+   function onOfferPresenter(error, offerSdp) {
+       if (error) return onError(error);
+   
+   	var message = {
+   		id : 'publish',
+   		sdpOffer : offerSdp
+   	};
+   	sendMessage(message);
+   }
+   function onIceCandidate(candidate) {
+   	   var message = {
+   	      id : 'publishCandidate',
+   	      candidate : candidate
+   	   }
+   	   sendMessage(message);
+   }
+   function sendMessage(data){
+       socket.emit('message',JSON.stringify(data));
+   }
+   function controlVideo(bool,streamObj){
+               streamObj = webRtcPeer.peerConnection.getLocalStreams()[0];
+               streamObj.getVideoTracks().forEach(function (track) {
+                   track.enabled = !!bool;
+               });
+       }
+   function controlAudio(bool,streamObj){
+           streamObj = webRtcPeer.peerConnection.getLocalStreams()[0];
+           streamObj.getAudioTracks().forEach(function (track) {
+               track.enabled = !!bool;
+           });
+   }
+   function videoBtnClick(){
+               if($('.cam-on').hasClass('show')){
+                   controlVideo(false,videoStream);
+                   $('.cam-on').removeClass('show');
+                   $('.cam-off').addClass('show');
+               }else{
+                   controlVideo(true,videoStream);
+                   $('.cam-on').addClass('show');
+                   $('.cam-off').removeClass('show');
+               }
+       }
+   function audioBtnClick(){
+               if($('.mic-on').hasClass('show')){
+                   controlAudio(false,videoStream);
+                   $('.mic-on').removeClass('show');
+                   $('.mic-off').addClass('show');
+               }else{
+                   controlAudio(true,videoStream);
+                   $('.mic-on').addClass('show');
+                   $('.mic-off').removeClass('show');
+               }
+       }
+   function showBeta(){
+       $('#beta').fadeIn();
+   }
+   function cancelPop(){
+       $('#beta').fadeOut();
+   }
+   function onContinue(){
+       if(webRtcPeer){
+          disposeWebrtc();
+          webRtcPeer = null;
+       }
+       setTimeout(startPub,1000);
+       $('#beta').fadeOut();
+   }
+   function disposeWebrtc(){
+       var pc = webRtcPeer.peerConnection;
+       var dc = webRtcPeer.dataChannel;
+       try {
+           if (dc) {
+               if (dc.signalingState === 'closed')
+                   return;
+               dc.close();
+           }
+           if (pc) {
+               if (pc.signalingState === 'closed')
+                   return;
+               pc.getLocalStreams().forEach(streamStop);
+               pc.close();
+           }
+       } catch (err) {
+           alert('Exception disposing webrtc peer ' + err);
+       }
+   }
+   function streamStop(stream) {
+       stream.getTracks().forEach(trackStop);
+   }
+   function trackStop(track) {
+       track.stop && track.stop();
+   }
+</script>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Kurento loadbalancer example</title>
+    </head>
+    <body style="position: fixed;margin: 0px;width: 100%;height: 100%;">
+		<button style="position: fixed;top: 0px;z-index: 999999999;" onclick="getMeta()">get Video Time</button>
+        <video id="video" autoplay width="100%" height="100%" style="background-color: #000;"></video>
+    </body>
+</html>
+<script src="/socket.io/socket.io.js" ></script>
+<script src="adapter.js"></script>
+<script src="kurento-utils.js" ></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" ></script>
+<script>
+var socket = io.connect('/');
+var video;
+var webRtcPeer;
+var flag = false;
+socket.on('connect',function(){
+      video = document.getElementById('video');
+      viewer();
+      socket.on('onSubscribeAnswer',function(message){
+         // alert(JSON.stringify(message));
+            if (message.response == 'accepted') {
+               webRtcPeer.processAnswer(message.sdpAnswer);
+            } else {
+                webRtcPeer.addIceCandidate(message.candidate);
+            }
+        });
+      socket.on('onIceCandidate',function(candidate){
+             webRtcPeer.addIceCandidate(candidate);
+        });
+	  socket.on('onPresenterNotFound',function(candidate){
+		  if(!flag){
+             alert('presenter not yet joined please realod after presntation start');
+			 flag = true;
+		  }
+             
+        });
+});
+function getMeta(){
+	$("#video").on(
+    "timeupdate", 
+    function(event){
+      onTrackedVideoFrame(this.currentTime, this.duration);
+    });
+}
+function onTrackedVideoFrame(currentTime, duration){
+    console.log('current time : '+currentTime+' total time : '+duration);
+}
+function viewer() {
+	if (!webRtcPeer) {
+		var options = {
+			remoteVideo: video,
+			onicecandidate : onIceCandidate
+		}
+
+		webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, function(error) {
+			if(error) return onError(error);
+
+			this.generateOffer(onOfferViewer);
+		});
+	}
+}
+function onOfferViewer(error, offerSdp) {
+	if (error) return onError(error)
+
+	var message = {
+		id : 'subscribe',
+		sdpOffer : offerSdp
+	}
+	sendMessage(message);
+}
+function onIceCandidate(candidate) {
+	   console.log('Local candidate' + JSON.stringify(candidate));
+
+	   var message = {
+	      id : 'playCandidate',
+	      candidate : candidate,
+          publishedStreamName:'streamname'
+	   }
+	   sendMessage(message);
+}
+function sendMessage(data){
+    socket.emit('message',JSON.stringify(data));
+}
+</script>

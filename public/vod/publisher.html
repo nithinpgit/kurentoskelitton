@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Kurento loadbalancer example</title>
+        <script>
+            var videoStream;
+        </script>
+    </head>
+    <body style="position: fixed;margin: 0px;width: 100%;height: 100%;">
+        <video id="video" autoplay muted width="100%" height="100%" style="background-color: #000;"></video>
+        <input id="urlInp" type="text" style="position: absolute;top: 10px;left: calc(100% - 25%);width: 250px;" value="http://jitsi.omnovia.com:2468/converted/highway.mp4"/>
+        <button id="ext-btn" class="video-btn" style="position: absolute;top: 10px;left: calc(100% - 35%);" onclick="startVod()">ExternalStreaming</button>  
+        <button id="video-btn" class="video-btn" style="position: absolute;top: 10px;left: calc(100% - 45%);" onclick="videoBtnClick()">ENABLE VIDEO</button>  
+        <button id="audio-btn" class="audio-btn" style="position: absolute;top: 10px;left: calc(100% - 55%);" onclick="audioBtnClick()">ENABLE AUDIO</button>
+    </body>
+</html>
+<script src="/socket.io/socket.io.js" ></script>
+<script src="adapter.js"></script>
+<script src="kurento-utils.js" ></script>
+<script>
+var socket = io.connect('/');
+var video;
+var webRtcPeer;
+socket.on('connect',function(){
+      video = document.getElementById('video');
+      presenter();
+      socket.on('onPublishAnswer',function(message){
+            if (message.response != 'accepted') {
+                   alert('not accepted');
+                } else {
+                    webRtcPeer.processAnswer(message.sdpAnswer);
+                }
+        });
+      socket.on('onIceCandidate',function(candidate){
+            webRtcPeer.addIceCandidate(candidate);
+        });
+    socket.on('successFileStream',function(url){
+           alert(url);
+        });
+});
+function startVod(){
+    var message = {
+		id : 'publishFromFile',
+		url : document.getElementById('urlInp').value
+	};
+	sendMessage(message);
+}
+function presenter() {
+	if (!webRtcPeer) {
+        /*
+        creating constraints for mozilla screen share 
+        */
+        screen_constraints = {
+            mozMediaSource: 'screen',
+            mediaSource: 'screen',
+            maxFrameRate: 1,
+            width: {
+                ideal: 640
+            },
+            height: {
+                ideal: 360
+            }
+        };
+        var constraints = {
+            audio: true,
+            video: screen_constraints
+        };
+        var options = {
+			localVideo: video,
+			onicecandidate : onIceCandidate
+	    }
+        /*
+        assigning screenconstraints for mozilla
+        */
+        if (!!navigator.mozGetUserMedia) {
+            options = {
+                    localVideo: video,
+                    onicecandidate : onIceCandidate,
+                    mediaConstraints:constraints
+                }
+        }
+        
+		webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function(error) {
+			if(error) return onError(error);
+			this.generateOffer(onOfferPresenter);
+		});
+	}
+}
+function onOfferPresenter(error, offerSdp) {
+    if (error) return onError(error);
+
+	var message = {
+		id : 'publish',
+		sdpOffer : offerSdp
+	};
+	sendMessage(message);
+}
+function onIceCandidate(candidate) {
+	   var message = {
+	      id : 'publishCandidate',
+	      candidate : candidate
+	   }
+	   sendMessage(message);
+}
+function sendMessage(data){
+    socket.emit('message',JSON.stringify(data));
+}
+function controlVideo(bool,streamObj){
+            streamObj.getVideoTracks().forEach(function (track) {
+                track.enabled = !!bool;
+            });
+    }
+function controlAudio(bool,streamObj){
+    console.log(streamObj);
+        streamObj.getAudioTracks().forEach(function (track) {
+            track.enabled = !!bool;
+        });
+}
+function videoBtnClick(){
+        if(document.getElementById('video-btn').innerHTML == 'ENABLE VIDEO'){
+            document.getElementById('video-btn').innerHTML = 'DISABLE VIDEO';
+            controlVideo(true,videoStream);
+        }else{
+            document.getElementById('video-btn').innerHTML = 'ENABLE VIDEO';
+            controlVideo(false,videoStream);
+        }
+    }
+function audioBtnClick(){
+        if(document.getElementById('audio-btn').innerHTML == 'ENABLE AUDIO'){
+            document.getElementById('audio-btn').innerHTML = 'DISABLE AUDIO';
+            controlAudio(true,videoStream);
+        }else{
+            document.getElementById('audio-btn').innerHTML = 'ENABLE AUDIO';
+            controlAudio(false,videoStream);
+        }
+    }
+</script>

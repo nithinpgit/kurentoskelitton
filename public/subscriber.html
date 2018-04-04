@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="utf-8">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+      <link rel="apple-touch-icon" href="apple-touch-icon.png">
+      <title>Flow subscriber</title>
+      <style>
+         body{
+         position: fixed;
+         margin: 0px;
+         padding: 0px;
+         width: 100%;
+         height: 100%;
+         }
+         video{
+         width: 100%;
+         height: 100%;
+         }
+      </style>
+   </head>
+   <body>
+      <video id="video" autoplay width="100%" height="100%" style="background-color: #000;"></video>
+   </body>
+</html>
+<script src="/socket.io/socket.io.js" ></script>
+<script src="assets/js/adapter.js"></script>
+<script src="assets/js/kurento-utils.js" ></script>
+<script>
+   var socket = io.connect('/');
+   var video;
+   var webRtcPeer;
+   var flag = false;
+   socket.on('connect',function(){
+         video = document.getElementById('video');
+         viewer();
+         socket.on('onSubscribeAnswer',function(message){
+            // alert(JSON.stringify(message));
+               if (message.response == 'accepted') {
+                  webRtcPeer.processAnswer(message.sdpAnswer);
+               } else {
+                   webRtcPeer.addIceCandidate(message.candidate);
+               }
+           });
+         socket.on('onIceCandidate',function(candidate){
+                webRtcPeer.addIceCandidate(candidate);
+           });
+   	  socket.on('onPresenterNotFound',function(candidate){
+   		  if(!flag){
+                alert('presenter not yet joined please realod after presntation start');
+   			 flag = true;
+   		  }
+                
+           });
+   });
+   function getMeta(){
+   	$("#video").on(
+       "timeupdate", 
+       function(event){
+         onTrackedVideoFrame(this.currentTime, this.duration);
+       });
+   }
+   function onTrackedVideoFrame(currentTime, duration){
+       console.log('current time : '+currentTime+' total time : '+duration);
+   }
+   function viewer() {
+   	if (!webRtcPeer) {
+           
+   		var options = {
+   			remoteVideo: video,
+   			onicecandidate : onIceCandidate,
+               configuration: {
+                        iceServers:[
+                       { "url": "turn:54.169.103.77:443?transport=tcp",
+                       "username": "turn",
+                       "credential": "turn"
+                       }
+                   ]
+               }
+   		}
+         
+   		webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, function(error) {
+   			if(error) return onError(error);
+   
+   			this.generateOffer(onOfferViewer);
+   		});
+   	}
+   }
+   function onOfferViewer(error, offerSdp) {
+   	if (error) return onError(error)
+   
+   	var message = {
+   		id : 'subscribe',
+   		sdpOffer : offerSdp
+   	}
+   	sendMessage(message);
+   }
+   function onIceCandidate(candidate) {
+   	   console.log('Local candidate' + JSON.stringify(candidate));
+   
+   	   var message = {
+   	      id : 'playCandidate',
+   	      candidate : candidate,
+             publishedStreamName:'streamname'
+   	   }
+   	   sendMessage(message);
+   }
+   function sendMessage(data){
+       socket.emit('message',JSON.stringify(data));
+   }
+</script>
